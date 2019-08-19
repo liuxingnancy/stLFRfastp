@@ -10,7 +10,7 @@ LIBRARY_DIRS ?=
 SRC := $(wildcard ${DIR_SRC}/*.cpp)
 OBJ := $(patsubst %.cpp,${DIR_OBJ}/%.o,$(notdir ${SRC}))
 
-TARGET := fastp
+TARGET := stLFRfastp
 
 BIN_TARGET := ${TARGET}
 
