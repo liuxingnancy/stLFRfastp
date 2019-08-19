@@ -1,4 +1,4 @@
-# fastp
+# stLFRfastp
 A tool designed to provide fast all-in-one preprocessing for FastQ files. This tool is developed in C++ with multithreading supported to afford high performance. 
 * [features](#features)
 * [simple usage](#simple-usage)
