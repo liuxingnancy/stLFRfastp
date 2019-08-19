@@ -1,16 +1,9 @@
-[![install with conda](
-https://anaconda.org/bioconda/fastp/badges/version.svg)](https://anaconda.org/bioconda/fastp)
-[![install with conda](
-https://anaconda.org/bioconda/fastp/badges/downloads.svg)](https://anaconda.org/bioconda/fastp)
-[![DebianBadge](
-https://badges.debian.net/badges/debian/unstable/fastp/version.svg)](https://packages.debian.org/unstable/fastp)
-[![Build Status](https://travis-ci.org/OpenGene/fastp.svg?branch=master)](https://travis-ci.org/OpenGene/fastp)
 # fastp
 A tool designed to provide fast all-in-one preprocessing for FastQ files. This tool is developed in C++ with multithreading supported to afford high performance. 
 * [features](#features)
 * [simple usage](#simple-usage)
 * [examples of report](#examples-of-report)
-* [download, compile and install](#get-fastp)
+* [download, compile and install](#get-stLFRfastp)
 * [input and output](#input-and-output)
 * [filtering by quality, length, complexity, etc.](#filtering)
 * [adapter trimming](#adapters)
@@ -61,27 +54,14 @@ By default, the HTML report is saved to `fastp.html` (can be specified with `-h`
 * HTML report: http://opengene.org/fastp/fastp.html
 * JSON report: http://opengene.org/fastp/fastp.json
 
-# get fastp
-## install with Bioconda
-[![install with conda](
-https://anaconda.org/bioconda/fastp/badges/version.svg)](https://anaconda.org/bioconda/fastp)
+# get stLFRfastp
+## compile from source
 ```shell
-# note: the fastp version in bioconda may be not the latest
-conda install -c bioconda fastp
-```
-## or download binary (only for Linux systems, http://opengene.org/fastp/fastp)
-```shell
-# this binary was compiled on CentOS, and tested on CentOS/Ubuntu
-wget http://opengene.org/fastp/fastp
-chmod a+x ./fastp
-```
-## or compile from source
-```shell
-# get source (you can also use browser to download from master or releases)
+# get source (you can use browser to download from master or releases)
 git clone https://gitlab.genomics.cn/liuxing2/stlfrfastp.git
 
 # build
-cd fastp
+cd stLFRfastp
 make
 
 # Install
