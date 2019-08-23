@@ -116,11 +116,13 @@ public:
         length = 16;
 		reads_support = 20;
 		prefix = "P5";
+		umiout = false;
     }
 public:
     bool enabled;
     size_t length;
     string prefix;
+	bool umiout;
 	string  umiFile;
 	float reads_support;
 };
@@ -129,16 +131,21 @@ class BarcodeOptions {
 public:
 	BarcodeOptions() {
 		enabled = false;
+		barcodeout = false;
 		location = BARCODE_LOC_DEFAULT;
 		length = 10;
 		skip = 6;
+		barcodeStatLen = 50;
 	}
 public:
 	bool enabled;
+	bool barcodeout;
 	int location;
 	int length;
 	int skip;
+	int barcodeStatLen = 50;
 	string barcodeListFile;
+	string barcodeOutFile;
 	bool hasBarcodeListFile;
 	map<string, int> barcode_map;
 };

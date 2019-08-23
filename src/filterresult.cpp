@@ -37,6 +37,16 @@ void FilterResult::addMergedPairs(int pairs) {
     mMergedPairs += pairs;
 }
 
+long FilterResult::getBarcodeReadsNumber()
+{
+	return mFindBarcodeRead;
+}
+
+long FilterResult::getUMIReadsNumber()
+{
+	return mFindUMIRead;
+}
+
 FilterResult* FilterResult::merge(vector<FilterResult*>& list) {
     if(list.size() == 0)
         return NULL;
@@ -64,17 +74,18 @@ FilterResult* FilterResult::merge(vector<FilterResult*>& list) {
 
 		//merge barcode readsNumber stat
 		map<string, long>::iterator iter;
-		//if (result->mOptions->barcode.enabled) {
-		//	for (iter = list[i]->mBarcode.begin(); iter != list[i]->mBarcode.end(); iter++) {
-		//		if (result->mBarcode.count(iter->first) > 0)
-		//			result->mBarcode[iter->first] += iter->second;
-		//		else
-		//			result->mBarcode[iter->first] = iter->second;
-		//	}
-		//}
+		if (result->mOptions->barcode.enabled && result->mOptions->barcode.barcodeout) {
+			for (iter = list[i]->mBarcode.begin(); iter != list[i]->mBarcode.end(); iter++) {
+				if (result->mBarcode.count(iter->first) > 0)
+					result->mBarcode[iter->first] += iter->second;
+				else
+					result->mBarcode[iter->first] = iter->second;
+			}
+			map<string, long>().swap(list[i]->mBarcode);
+		}
 
 		//merge barcode umis stat and write to umi_out file
-		if(result->mOptions->umi.enabled){
+		if(result->mOptions->umi.enabled && result->mOptions->umi.umiout){
 			//cout << "thread barcode umi map size: " <<  i << "   " << sizeof(list[i]->mUMI) << endl;
 			map<string, vector<string>>::iterator uiter;
 			vector<string>::iterator umi;
@@ -193,25 +204,27 @@ void FilterResult::addPolyXTrimmed(int base, int length) {
 
 void FilterResult::addBarcode(string barcode)
 {
-	mFindBarcodeRead += 2;
-	//if (mBarcode.count(barcode) > 0) {
-	//	mBarcode[barcode] ++;
-	//}
-	//else {
-	//	mBarcode[barcode] = 1;
-	//}
+	mFindBarcodeRead += 1;
+	if (mBarcode.count(barcode) > 0) {
+		mBarcode[barcode] ++;
+	}
+	else {
+		mBarcode[barcode] = 1;
+	}
 }
 
 void FilterResult::addUMI(string barcode, string umi)
 {
 	mFindUMIRead += 2;
-	if (mUMI.count(barcode) > 0) {
-		mUMI[barcode].push_back(umi);
-	}
-	else {
-		vector<string> newUMIvector;
-		newUMIvector.push_back(umi);
-		mUMI[barcode] = newUMIvector;
+	if (mOptions->umi.umiout) {
+		if (mUMI.count(barcode) > 0) {
+			mUMI[barcode].push_back(umi);
+		}
+		else {
+			vector<string> newUMIvector;
+			newUMIvector.push_back(umi);
+			mUMI[barcode] = newUMIvector;
+		}
 	}
 }
 
@@ -229,13 +242,32 @@ long FilterResult::getTotalPolyXTrimmedBases() {
   return sum_bases;
 }
 
-void FilterResult::umiOut(string umioutfile, float umi_reads_support)
+void FilterResult::barcodeOut() {
+	mBarcodeTypes = mBarcode.size();
+	mBarcodeStat = new long[mOptions->barcode.barcodeStatLen];
+	map<string, long>::iterator biter;
+	ofstream barcodeOutStream;
+	barcodeOutStream.open(mOptions->barcode.barcodeOutFile.c_str(), ofstream::out);
+	for (biter = mBarcode.begin(); biter != mBarcode.end(); biter++) {
+		if (biter->second<mOptions->barcode.barcodeStatLen) {
+			mBarcodeStat[biter->second-1] += biter->second;
+		}
+		else {
+			mBarcodeStat[mOptions->barcode.barcodeStatLen-1]+= biter->second;
+		}
+		barcodeOutStream << biter->first << "\t" << biter->second << endl;
+	}
+	barcodeOutStream.close();
+	map<string, long>().swap(mBarcode);
+}
+
+void FilterResult::umiOut()
 {
 	map<string, vector<string>>::iterator uiter;
 	//vector<string>::iterator umi;
 	int i;
 	ofstream umioutstream;
-	umioutstream.open(umioutfile.c_str(), ifstream::out);
+	umioutstream.open(mOptions->umi.umiFile.c_str(), ofstream::out);
 	map<string, int> umicountmap;
 	map<string, set<string>> barcodeumimap;
 	map<string, int>::iterator citer;
@@ -251,7 +283,7 @@ void FilterResult::umiOut(string umioutfile, float umi_reads_support)
 		
 		for (citer = umicountmap.begin(); citer != umicountmap.end(); citer++) {
 			float rate = (float)citer->second / (float)totalumis * 100;
-			if (rate >= umi_reads_support) {
+			if (rate >= mOptions->umi.reads_support) {
 				uiter->second.push_back(citer->first);
 				barcodeumimap[citer->first].insert(uiter->first);
 			}
@@ -275,7 +307,7 @@ void FilterResult::umiOut(string umioutfile, float umi_reads_support)
 
 	umioutstream.close();
 	umiTypes = barcodeumimap.size();
-	string umibarcodeoutfile = umioutfile.append(".reverse");
+	string umibarcodeoutfile = mOptions->umi.umiFile.append(".reverse");
 	ofstream umibarcodeoutstream;
 	umibarcodeoutstream.open(umibarcodeoutfile.c_str(), ifstream::out);
 	map<string, set<string>>::iterator biter;
@@ -319,13 +351,17 @@ void FilterResult::print() {
         cerr <<  "bases corrected by overlap analysis: " << getTotalCorrectedBases() << endl;
     }
 	if (mOptions->barcode.enabled) {
-		cerr << "reads with barcode: " << mFindBarcodeRead << endl;
+		cerr << "reads with barcode: " << mFindBarcodeRead*2 << endl;
+		if (mOptions->barcode.barcodeout) {
+			cerr << "barcode types:" << mBarcodeTypes << endl;
+		}
 	}
 	if (mOptions->umi.enabled) {
-		cerr << "barcode types with umi: " << barcodeTypesWithUMI << endl;
 		cerr << "reads with umi: " << mFindUMIRead << endl;
-		cerr << "umi types: " << umiTypes << endl;
-		cerr << "barcode umi relation output file path: " << mOptions->umi.umiFile << endl;
+		if (mOptions->umi.umiout)
+			cerr << "barcode types with umi: " << barcodeTypesWithUMI << endl;
+			cerr << "umi types: " << umiTypes << endl;
+			cerr << "barcode umi relation output file path: " << mOptions->umi.umiFile << endl;
 	}
 }
 
@@ -467,13 +503,24 @@ void FilterResult::reportHtml(ofstream& ofs, long totalReads, long totalBases) {
     }
     if(mOptions->complexityFilter.enabled)
         HtmlReporter::outputRow(ofs, "reads with low complexity:", HtmlReporter::formatNumber(mFilterReadStats[FAIL_COMPLEXITY]) + " (" + to_string(mFilterReadStats[FAIL_COMPLEXITY] * 100.0 / total) + "%)");
-	if (mOptions->barcode.enabled) {
-		HtmlReporter::outputRow(ofs, "reads with barcode marker:", HtmlReporter::formatNumber(mFindBarcodeRead) + "(" + to_string(mFindBarcodeRead * 100 / total) + "%)");
+	if (mOptions->adapter.enabled) {
+		HtmlReporter::outputRow(ofs, "reads with adapter trimmed:", HtmlReporter::formatNumber(mTrimmedAdapterRead) + " (" + to_string(mTrimmedAdapterRead * 100 / total) + "%)");
+		HtmlReporter::outputRow(ofs, "bases trimmed due to adapters:", HtmlReporter::formatNumber(mTrimmedAdapterBases) + " (" + to_string(mTrimmedAdapterBases * 100 / totalBases) + "%)");
 	}
-	if (mOptions->umi.enabled)
-		HtmlReporter::outputRow(ofs, "barcode types with umi:", HtmlReporter::formatNumber(barcodeTypesWithUMI));
+
+	if (mOptions->barcode.enabled) {
+		HtmlReporter::outputRow(ofs, "reads with barcode marker:", HtmlReporter::formatNumber(mFindBarcodeRead*2) + "(" + to_string(mFindBarcodeRead*2 * 100 / total) + "%)");
+		if (mOptions->barcode.barcodeout) {
+			HtmlReporter::outputRow(ofs, "barcode types:", HtmlReporter::formatNumber(mBarcodeTypes));
+		}
+	}
+	if (mOptions->umi.enabled) {
 		HtmlReporter::outputRow(ofs, "reads with UMI sequence:", HtmlReporter::formatNumber(mFindUMIRead) + "(" + to_string(mFindUMIRead * 100 / total) + "%)");
-		HtmlReporter::outputRow(ofs, "umi types:", HtmlReporter::formatNumber(umiTypes));
+		if (mOptions->umi.umiout) {
+			HtmlReporter::outputRow(ofs, "barcode types with umi:", HtmlReporter::formatNumber(barcodeTypesWithUMI) + "(" + to_string(barcodeTypesWithUMI*100/mBarcodeTypes) + "%)");
+			HtmlReporter::outputRow(ofs, "umi types:", HtmlReporter::formatNumber(umiTypes));
+		}
+	}
     ofs << "</table>\n";
 }
 

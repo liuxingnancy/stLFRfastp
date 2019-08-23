@@ -41,8 +41,10 @@ public:
 	void addUMI(string barcode, string umi);
     long getTotalPolyXTrimmedReads();
     long getTotalPolyXTrimmedBases();
-	//write umi to umi_out file
-	void umiOut(string umioutfile, float umi_reads_support);
+	//write reads number per barcode statistic to barcode_out_file
+	void barcodeOut();
+	//write umi and barcode relation table to umi_out_file
+	void umiOut();
     // a part of JSON report
     void reportJson(ofstream& ofs, string padding);
     // a part of JSON report for adapters
@@ -63,25 +65,30 @@ public:
     void incCorrectedReads(int count);
     void addMergedPairs(int pairs);
 
+	long getBarcodeReadsNumber();
+	long getUMIReadsNumber();
+
 
 public:
     Options* mOptions;
     bool mPaired;
     long mCorrectedReads;
     long mMergedPairs;
+	long* mBarcodeStat = NULL;
+	long mFindBarcodeRead;
+	long mBarcodeTypes;
+	long mFindUMIRead;
+	long barcodeTypesWithUMI;
+	long umiTypes;
 private:
     long mFilterReadStats[FILTER_RESULT_TYPES];
     long mTrimmedAdapterRead;
     long mTrimmedAdapterBases;
     long mTrimmedPolyXReads[4] = {0};
     long mTrimmedPolyXBases[4] = {0};
-	long mFindBarcodeRead;
-	long mFindUMIRead;
-	long barcodeTypesWithUMI;
-	long umiTypes;
     map<string, long, classcomp> mAdapter1;
     map<string, long, classcomp> mAdapter2;
-	//map<string, long> mBarcode;
+	map<string, long> mBarcode;
 	map<string, vector<string>> mUMI;
     long* mCorrectionMatrix;
 };

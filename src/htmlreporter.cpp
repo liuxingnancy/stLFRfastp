@@ -139,6 +139,7 @@ void HtmlReporter::printSummary(ofstream& ofs, FilterResult* result, Stats* preS
         if(!mOptions->adapter.detectedAdapter2.empty())
             outputRow(ofs, "Detected read2 adapter:", mOptions->adapter.detectedAdapter2);
     }
+
     ofs << "</table>\n";
     ofs << "</div>\n";
 
@@ -206,6 +207,50 @@ void HtmlReporter::printSummary(ofstream& ofs, FilterResult* result, Stats* preS
         ofs << "</div>\n";
         ofs << "</div>\n";
     }
+
+	if (mOptions->barcode.enabled && mOptions->barcode.barcodeout) {
+		ofs << "<div class='section_div'>\n";
+		ofs << "<div class='section_title' onclick=showOrHide('barcode')><a name='summary'>Barcode</a></div>\n";
+		ofs << "<div id='barcode'>\n";
+
+		reportBarcode(ofs, result->mBarcodeStat, mOptions->barcode.barcodeStatLen);
+
+		ofs << "</div>\n";
+		ofs << "</div>\n";
+	}
+}
+
+void HtmlReporter::reportBarcode(ofstream& ofs, long* barcodeStat, int maxReadsNumber) {
+	long* x = new long[maxReadsNumber];
+	for (int i = 0; i < maxReadsNumber; i++) {
+		x[i] = i +1;
+	}
+	ofs << "<div id='barcode_figure'>\n";
+	ofs << "<div class='figure' id = 'plot_barcode_reads_number', style='height:400px;'></div>\n";
+	ofs << "</div>\n";
+	
+	ofs << "<div class='sub_section_tips'>This is the statistic of reads number per barcode. <br /> The x axis represents the reads number per barcode while the y axis represent the total reads number corresponding to the barcode with reads number marked by x axis.";
+	ofs << "</div>\n";
+	ofs << "\n<script type=\"text/javascript\">" << endl;
+	string json_str = "var data=[";
+
+	json_str += "{";
+	json_str += "x:[" + Stats::list2string(x, maxReadsNumber) + "],";
+	json_str += "y:[" + Stats::list2string(barcodeStat, maxReadsNumber) + "],";
+	json_str += "name: 'Reads_Number ',";
+	json_str += "type:'bar',";
+	json_str += "line:{color:'rgba(225,0,128,1.0)', width:1.5}\n";
+	json_str += "}";
+
+	json_str += "];\n";
+
+	json_str += "var layout={title:'barcode reads number ', xaxis:{title:'Reads number per barcode (paired)'}, yaxis:{title:'Reads_number * barcode_number'}};\n";
+	json_str += "Plotly.newPlot('plot_barcode_reads_number', data, layout);\n";
+
+	ofs << json_str;
+	ofs << "</script>" << endl;
+
+	delete[] x;
 }
 
 void HtmlReporter::reportInsertSize(ofstream& ofs, int isizeLimit) {

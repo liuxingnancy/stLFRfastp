@@ -191,8 +191,10 @@ bool PairEndProcessor::process(){
     Stats* finalPreStats2 = Stats::merge(preStats2);
     Stats* finalPostStats2 = Stats::merge(postStats2);
 	FilterResult* finalFilterResult = FilterResult::merge(filterResults);
-	if (mOptions->umi.enabled)
-		finalFilterResult->umiOut(mOptions->umi.umiFile, mOptions->umi.reads_support );
+	if (mOptions->barcode.enabled && mOptions->barcode.barcodeout)
+		finalFilterResult->barcodeOut();
+	if (mOptions->umi.enabled && mOptions->umi.umiout)
+		finalFilterResult->umiOut( );
 
     cerr << "Read1 before filtering:"<<endl;
     finalPreStats1->print();

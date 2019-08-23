@@ -80,6 +80,18 @@ void JsonReporter::report(FilterResult* result, Stats* preStats1, Stats* postSta
     if(mOptions->isPaired())
         ofs << "\t\t\t" << "\"read2_mean_length\":" << preStats2->getMeanLength() << "," << endl;
     ofs << "\t\t\t" << "\"gc_content\":" << (pre_total_bases == 0?0.0:(double)pre_total_gc / (double)pre_total_bases)  << endl; 
+	if (mOptions->barcode.enabled) {
+		ofs << "\t\t\t" << "\"reads_with_barcode\":" << result->mFindBarcodeRead*2 << "," << endl;
+		//if (mOptions->barcode.barcodeout)
+		//	ofs << "\t\t\t" << "\"barcode_types\":" << result->mBarcodeTypes << "," << endl;
+	}
+	if (mOptions->umi.enabled) {
+		ofs << "\t\t\t" << "\"reads_with_ums\":" << result->mFindUMIRead << "," << endl;
+		if (mOptions->umi.umiout) {
+			ofs << "\t\t\t" << "\"umi_types\":" << result->umiTypes << "," << endl;
+			ofs << "\t\t\t" << "\"barcode_types_with_umi\":" << result->barcodeTypesWithUMI << "," << endl;
+		}
+	}
     ofs << "\t\t" << "}," << endl;
 
     ofs << "\t\t" << "\"after_filtering\": {" << endl;
@@ -139,6 +151,20 @@ void JsonReporter::report(FilterResult* result, Stats* preStats1, Stats* postSta
         ofs << "\t" << "}";
         ofs << "," << endl;
     }
+
+	if (mOptions->barcode.enabled && mOptions->barcode.barcodeout) {
+		ofs << "\t""\"barcode_reads_number\":{" << endl;
+		ofs << "\t\t\"barcode_types\":" << result->mBarcodeTypes << "," << endl;
+		ofs << "\t\t\"histogram\":[";
+		for (int d = 0; d < mOptions->barcode.barcodeStatLen; d++) {
+			ofs << result->mBarcodeStat[d];
+			if (d != mOptions->barcode.barcodeStatLen)
+				ofs << ",";
+		}
+		ofs << "]" << endl;
+		ofs << "\t" << "}";
+		ofs << "," << endl;
+	}
 
     if(result && mOptions->adapterCuttingEnabled()) {
         ofs << "\t" << "\"adapter_cutting\": " ;

@@ -40,7 +40,8 @@ int main(int argc, char* argv[]){
     cmd.add<string>("failed_out", 0, "specify the file to store reads that cannot pass the filters.", false, "");
     cmd.add("merge", 'm', "for paired-end input, merge each pair of reads into a single read if they are overlapped. The merged reads will be written to the file given by --merged_out, the unmerged reads will be written to the files specified by --out1 and --out2. The merging mode is disabled by default.");
     cmd.add<string>("merged_out", 0, "in the merging mode, specify the file name to store merged output, or specify --stdout to stream the merged output", false, "");
-	cmd.add<string>("umi_out", 0, "this options must be given when --umi has been given, to write the barcode and umi relationship list", false, "barcode_umi_relation.stat");
+	cmd.add<string>("barcode_out_file", 0, "for the reads number per barcode output.", false, "barcode_reads_number.stat");
+	cmd.add<string>("umi_out_file", 0, "this options must be given when --umi and --umi_out has been given, to write the barcode and umi relationship list", false, "barcode_umi_relation.stat");
     cmd.add("include_unmerged", 0, "in the merging mode, write the unmerged or unpaired reads to the file specified by --merge. Disabled by default.");
     cmd.add("phred64", '6', "indicate the input is using phred64 scoring (it'll be converted to phred33, so the output will still be phred33)");
     cmd.add<int>("compression", 'z', "compression level for gzip output (1 ~ 9). 1 is fastest, 9 is smallest, default is 4.", false, 4);
@@ -123,11 +124,13 @@ int main(int argc, char* argv[]){
    // cmd.add<string>("umi_prefix", 0, "if specified, an underline will be used to connect prefix and UMI (i.e. prefix=UMI, UMI=AATTCG, final=UMI_AATTCG). No prefix by default", false, "");
 	cmd.add<string>("umi_prefix", 0, "specify the prefix fixed sequence of the umi, you can  chose [P5, TN. M13R, PRC] or directly give the sequence, default=P5", false, "P5");
 	cmd.add<float>("umi_reads_support", 0, "specify the reads support rate for umi, only retain the umis that have reads support than the number given by (--umi_reads_support). Default 20 means 20%.", false, 20);
+	cmd.add("umi_out", 0, "if this option is given , output the umi and barcode relation table to file. But this will consume very large memory, so use this option by your risk");
    // cmd.add<int>("umi_skip", 0, "if the UMI is in read1/read2, fastp can skip several bases following UMI, default is 0", false, 0);
 
 	//barcode
 	cmd.add("barcode", 0, "enable barcode find and mark preprocessing");
-	cmd.add<string>("barcode_list", 0, "barcode list file contains the record of barcode sequence and barcode id relation.", false, "");
+	cmd.add("barcode_out", 0, "if this option is given, output the reads number per barcode statistic file. This will consume vquite large memory, so use this option by your risk");
+	cmd.add<string>("barcode_list", 0, "The barcode list file path.", false, "");
 	cmd.add<int>("barcode_loc", 0, "specify the location of barcode sequence start.",  false, 100);
 	cmd.add<int>("barcode_len", 0, "the length of one barcode sequence.", false, 10);
 	cmd.add<int>("barcode_skip", 0, "the skip length of two barcode sequence.", false, 6);
@@ -362,8 +365,9 @@ int main(int argc, char* argv[]){
 
     // umi
     opt.umi.enabled = cmd.exist("umi");
+	opt.umi.umiout = cmd.exist("umi_out");
     opt.umi.length = cmd.get<size_t>("umi_len");
-	opt.umi.umiFile = cmd.get<string>("umi_out");
+	opt.umi.umiFile = cmd.get<string>("umi_out_file");
 	opt.umi.reads_support = cmd.get<float>("umi_reads_support");
     //opt.umi.skip = cmd.get<int>("umi_skip");
 	if (opt.umi.enabled) {
@@ -386,13 +390,15 @@ int main(int argc, char* argv[]){
 		else {
 			opt.umi.prefix = umiPrefix;
 		}
-		if (opt.umi.umiFile.empty()) {
-			error_exit("You've enabled UMI by (--umi), you should specify the umi output file by (--umi_out)");
+		if (opt.umi.umiout && opt.umi.umiFile.empty()) {
+			error_exit("You've enabled UMI by (--umi),  and enabled umi output by (--umi_out), you should specify the umi output file by (--umi_out_file)");
 		}
 	}
     
 	// barcode
 	opt.barcode.enabled = cmd.exist("barcode");
+	opt.barcode.barcodeout = cmd.exist("barcode_out");
+	opt.barcode.barcodeOutFile = cmd.get<string>("barcode_out_file");
 	opt.barcode.length = cmd.get<int>("barcode_len");
 	opt.barcode.location = cmd.get<int>("barcode_loc");
 	opt.barcode.skip = cmd.get<int>("barcode_skip");

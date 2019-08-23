@@ -15,11 +15,13 @@ void UmiProcessor::process(Read* r1, Read* r2,  FilterResult* fr) {
 	string umi1 = umiFind(r1);
 	string umi2 = umiFind(r2);
 	if (umi1 != "") {
-		//addUmiToName(r1, r2, umi1);
+		if (! mOptions->umi.umiout)
+			addUmiToName(r1, r2, umi1);
 		fr->addUMI(r1->mBarcode, umi1);
 	}
 	else if (umi2 != "") {
-		//addUmiToName(r1, r2, umi2);
+		if(! mOptions->umi.umiout)
+			addUmiToName(r1, r2, umi2);
 		fr->addUMI(r2->mBarcode, umi2);
 	}
 }
@@ -57,7 +59,7 @@ string  UmiProcessor::umiFind(Read* r) {
 
 void UmiProcessor::addUmiToName(Read* r1,  Read* r2, string umi){
     string tag;
-	tag = "#" + umi;
+	tag = "/" + umi;
 	int nameTailPos1 = r1->mName.rfind("/1");
 	if (nameTailPos1 == -1) {
 		nameTailPos1 = r1->mName.rfind(' ');

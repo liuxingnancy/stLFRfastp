@@ -52,7 +52,7 @@ void BarcodeProcessor::process(Read* read1,  Read* read2, FilterResult* fr) {
 
 void BarcodeProcessor::addBarcodeToName(Read* r1, Read* r2, string barcode) {
 	string tag;
-	tag = "#" + barcode;
+	tag = "/" + barcode;
 	int nameTailPos1 = r1->mName.rfind("/1");
 	if (nameTailPos1 == -1) {
 		nameTailPos1 = r1->mName.rfind(' ');

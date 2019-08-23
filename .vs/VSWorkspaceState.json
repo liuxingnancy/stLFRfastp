@@ -1,7 +1,8 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\src"
   ],
-  "SelectedNode": "\\README.md",
+  "SelectedNode": "\\src\\options.cpp",
   "PreviewInSolutionExplorer": false
 }
