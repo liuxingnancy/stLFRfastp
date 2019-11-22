@@ -230,7 +230,7 @@ CCEDEED!DEDEDEDCEDCDDCDEDEEDDDCDDCDDDDDEDCDEECCDDEDDDDCEEDCEEEDEEDCEDDCDEEEDDCCE
 # unique molecular identifier (UMI) processing
 UMI is useful for duplication elimination and error correction based on generating consensus of reads originated from a same DNA fragment. It's used in stLFR RNA sequencing applications. UMIs can be integrated in the ployA tial of mRNA. stLFRfastp can extract  the UMI sequence and generate the UMI and barcode relation table.
 To enable UMI processing, you have to enable `-U` or `--umi` option in the command line, and specify `--umi_prefix`  to specify the prefix sequence of the UMI upstream, it can be one of:
-* P5, TN. M13R, PRC
+* P5, TN. M13R, PRC or DNA sequence
 
 The length of UMI should specified with `--umi_len`. 
 
@@ -286,6 +286,7 @@ options:
       --failed_out                     specify the file to store reads that cannot pass the filters. (string [=])
   -m, --merge                          for paired-end input, merge each pair of reads into a single read if they are overlapped. The merged reads will be written to the file given by --merged_out, the unmerged reads will be written to the files specified by --out1 and --out2. The merging mode is disabled by default.
       --merged_out                     in the merging mode, specify the file name to store merged output, or specify --stdout to stream the merged output (string [=])
+	  --barcode_out_file               for the reads number per barcode output. (string [=barcode_reads_number.stat])
       --umi_out                        this options must be given when --umi has been given, to write the barcode and umi relationship list (string [=barcode_umi_relation.stat])
       --include_unmerged               in the merging mode, write the unmerged or unpaired reads to the file specified by --merge. Disabled by default.
   -6, --phred64                        indicate the input is using phred64 scoring (it'll be converted to phred33, so the output will still be phred33)
@@ -344,7 +345,9 @@ options:
       --umi_len                        if the UMI is in read1/read2, its length should be provided, default=16 (unsigned long [=16])
       --umi_prefix                     specify the prefix fixed sequence of the umi, you can  chose [P5, TN. M13R, PRC] or directly give the sequence, default=P5 (string [=P5])
       --umi_reads_support              specify the reads support rate for umi, only retain the umis that have reads support than the number given by (--umi_reads_support). Default 20 means 20%. (float [=20])
+	  --umi_out                        if this option is given , output the umi and barcode relation table to file. But this will consume very large memory, so use this option by your risk
       --barcode                        enable barcode find and mark preprocessing
+	  --barcode_out                    if this option is given, output the reads number per barcode statistic file. This will consume vquite large memory, so use this option by your risk
       --barcode_list                   barcode list file contains the record of barcode sequence and barcode id relation. (string [=])
       --barcode_loc                    specify the location of barcode sequence start. (int [=100])
       --barcode_len                    the length of one barcode sequence. (int [=10])

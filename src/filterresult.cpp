@@ -378,7 +378,12 @@ void FilterResult::reportJson(ofstream& ofs, string padding) {
     if(mOptions->complexityFilter.enabled)
         ofs << padding << "\t" << "\"low_complexity_reads\": " << mFilterReadStats[FAIL_COMPLEXITY] << "," << endl;
     ofs << padding << "\t" << "\"too_short_reads\": " << mFilterReadStats[FAIL_LENGTH] << "," << endl;
-    ofs << padding << "\t" << "\"too_long_reads\": " << mFilterReadStats[FAIL_TOO_LONG] << endl;
+    ofs << padding << "\t" << "\"too_long_reads\": " << mFilterReadStats[FAIL_TOO_LONG] <<  "," << endl;
+
+	if (mOptions->adapter.enabled) {
+		ofs << padding << "\t" << "\"reads_with_adapter\":" << mTrimmedAdapterRead << "," << endl;
+		ofs << padding << "\t" << "\"bases_trimmed_of_adapter\":" << mTrimmedAdapterBases  << endl;
+	}
 
     ofs << padding << "}," << endl;
 }

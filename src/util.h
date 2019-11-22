@@ -257,6 +257,26 @@ inline char num2qual(int num) {
     return c;
 }
 
+inline long long barcodeEncode(int* barcodeLabel) {
+	long long encodesum = 0;
+	for (int i = 0; i < 3; i++) {
+		int barcode = barcodeLabel[i];
+		encodesum |= (barcode << 12 *(3- i));
+	}
+	return encodesum;
+}
+
+inline string barcodeDecode(long long barcodeSum) {
+	char barcodeTag[16];
+	int barcodeLabel[3];
+	for (int i = 0; i < 3; i++) {
+		int barcode = (barcodeSum >> 12 * i) & 2047;
+		barcodeLabel[i] = barcode;
+	}
+	sprintf(barcodeTag, "%04d_%04d_%04d", barcodeLabel[0], barcodeLabel[1], barcodeLabel[2]);
+	return barcodeTag;
+}
+
 inline void error_exit(const string& msg) {
     cerr << "ERROR: " << msg << endl;
     exit(-1);
